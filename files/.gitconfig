@@ -1,0 +1,24 @@
+[user]
+	name=Eric Cornely
+	email=eric.cornely@beoogo.be
+[alias]
+	st=status
+	ci=commit
+	co=checkout
+	b=branch
+	db=branch -d
+[core]
+	editor=vim
+	whitespace=tab-in-indent,blank-at-eof,space-before-tab
+	tabwidth=4
+[merge]
+	tool=kdiff3
+	ff=only
+[mergetool]
+	prompt = false
+	keepBackup = false
+	keepTemporaries = false
+[credential]
+	username = eric.c
+[cola]
+	spellcheck = false

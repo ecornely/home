@@ -1,0 +1,8 @@
+startup_message off
+vbell on
+autodetach on
+hardstatus alwayslastline
+#hardstatus string '%{WB}%H %{W}| %{Y}%l %{W}| %?%{w}%-w%?%{+b g}[%{W}%{r}%n%{W} %t%?{%u}%?%{-b g}]%{W}%?%+w%?%=%{G}| %{Y}%d-%m-%Y %c:%s '
+hardstatus string 'Host:%H | Load:%l | %w %=% | %{wk}%d-%m-%Y %c:%s'
+#caption always
+#caption string '$USER'

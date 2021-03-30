@@ -1,0 +1,90 @@
+#!/bin/bash
+set -e
+function usage(){
+  echo "registry [-b|--branch branch] <[-p|--project] project>"
+  echo ""
+  echo "Description:"
+  echo "    Registry is a beoogo tool that connects to beoogo's gitlab and extract the real tag name of a built image that has the current 'latest' alias"
+  echo ""
+  echo "    -b, --branch"
+  echo "            The branch that have been built"
+  echo "            Default: master"
+  echo "    -p, --project"
+  echo "            The project name"
+}
+
+function token_usage(){
+  echo "registry requires the presence of a file ~/.config/beoogo/gitlab_token with the gitlab private token content on a single line"
+}
+
+
+branch="master"
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -p|--project)
+    projectName="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -b|--branch)
+    branch="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -h|--help)
+    usage
+    exit 42
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+
+if [[ "$projectName" == "" ]]; then
+  if [[ ${#POSITIONAL[@]} == 1 ]]; then 
+    projectName=${POSITIONAL[0]}
+  else
+    echo "Too many positional parameters"
+    echo ""
+    usage
+    exit 1
+  fi
+fi
+
+if [[ "$projectName" == "" ]]; then
+  usage
+  exit 1
+fi
+
+if [[ ! -f ~/.config/beoogo/gitlab_token ]]; then
+  token_usage
+  exit 1
+fi
+
+token=$(cat ~/.config/beoogo/gitlab_token)
+gitlab="gitlab.beoogo.com"
+
+projectDefinition=$(curl --silent -H "PRIVATE-TOKEN: $token" "https://$gitlab/api/v4/projects?simple=true&search=$projectName")
+projectId=$( echo $projectDefinition | jq ".[] | select (.name==\"$projectName\").id")
+projectWebUrl=$( echo $projectDefinition | jq -r ".[] | select (.name==\"$projectName\").web_url")
+if [[ "null" == $projectId ]]; then
+  echo "Impossible to find project $projectName"
+  exit 404
+fi
+#TODO: one day, once gitlab will be updated to 11.8 at least
+#repositoryId=$(curl -H "PRIVATE-TOKEN: $token" "https://$gitlab/api/v4/projects/$projectId/registry/repositories" | jq ".[]|select(.path | endswith(\"$branch\")).id")
+#tagRevision=$(curl -H "PRIVATE-TOKEN: $token" "https://$gitlab/api/v4/projects/$projectId/registry/repositories/$repositoryId/tags/latest" | jq ".revision")
+
+repositoryId=$(curl --silent -H "PRIVATE-TOKEN: $token" "$projectWebUrl/container_registry.json" | jq ".[]|select(.path | endswith(\"$branch\")).id")
+tags=$(curl --silent -H "PRIVATE-TOKEN: $token" "$projectWebUrl/registry/repository/$repositoryId/tags?format=json&per_page=100")
+revision=$(echo $tags | jq -r ".[] | select(.name == \"latest\").revision")
+tagName=$(echo $tags | jq -r ".[] | select(.revision == \"$revision\" and .name != \"latest\").name")
+
+ echo -e "The \e[35mlatest\e[0m tag in branch \e[35m$branch\e[0m of project \e[35m$projectName\e[0m is an alias for: \e[32m$tagName\e[0m"
+

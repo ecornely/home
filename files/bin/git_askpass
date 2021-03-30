@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec echo "##gitlab_password##"

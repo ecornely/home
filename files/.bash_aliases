@@ -1,0 +1,7 @@
+alias ll='ls -lh'
+alias data='cd /var/lib/docker/volumes/beoogo-cloud-legacy-server*_data/_data'
+alias logs='cd /var/lib/docker/volumes/beoogo-cloud-legacy-server*_logs/_data'
+alias dc='HOME=/home/eric docker-compose'
+alias docker='HOME=/home/eric docker'
+alias d-login='docker login gitlab-registry.beoogo.com'
+alias d-logout='docker logout gitlab-registry.beoogo.com'
